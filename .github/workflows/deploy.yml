@@ -22,12 +22,45 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and run Docker Compose
+      - name: Install Docker Compose
         run: |
-          docker-compose up --build
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
+      - name: Create Docker Compose file
+        run: |
+          echo "version: '3.8'" > docker-compose.yml
+          echo "services:" >> docker-compose.yml
+          echo "  db:" >> docker-compose.yml
+          echo "    image: postgres:latest" >> docker-compose.yml
+          echo "    environment:" >> docker-compose.yml
+          echo "      POSTGRES_USER: \${POSTGRES_USER}" >> docker-compose.yml
+          echo "      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD}" >> docker-compose.yml
+          echo "      POSTGRES_DB: \${POSTGRES_DB}" >> docker-compose.yml
+          echo "    ports:" >> docker-compose.yml
+          echo "      - '5432:5432'" >> docker-compose.yml
+          echo "    volumes:" >> docker-compose.yml
+          echo "      - db-data:/var/lib/postgresql/data" >> docker-compose.yml
+          echo "  app:" >> docker-compose.yml
+          echo "    build: ." >> docker-compose.yml
+          echo "    environment:" >> docker-compose.yml
+          echo "      DB_HOST: db" >> docker-compose.yml
+          echo "      DB_PORT: 5432" >> docker-compose.yml
+          echo "      DB_USER: \${DB_USER}" >> docker-compose.yml
+          echo "      DB_PASSWORD: \${DB_PASSWORD}" >> docker-compose.yml
+          echo "      DB_NAME: \${DB_NAME}" >> docker-compose.yml
+          echo "      JWT_SECRET: \${JWT_SECRET}" >> docker-compose.yml
+          echo "    ports:" >> docker-compose.yml
+          echo "      - '3000:3000'" >> docker-compose.yml
+          echo "    depends_on:" >> docker-compose.yml
+          echo "      - db" >> docker-compose.yml
+          echo "volumes:" >> docker-compose.yml
+          echo "  db-data:" >> docker-compose.yml
+
+      - name: Build and run Docker Compose
+        run: docker-compose up --build
         env:
-          DB_HOST: db
-          DB_PORT: 5432
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
