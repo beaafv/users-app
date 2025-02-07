@@ -1,4 +1,3 @@
-// filepath: /Users/beatrizferreiravieira/code/beaafv/users-app/.github/workflows/deploy.yml
 name: Deploy to Docker Compose
 
 on:
